@@ -1,24 +1,39 @@
-import React from "react";
+import React, { createContext, useContext } from "react";
 import { random, useCurrentFrame } from "remotion";
 import { C, FONT } from "./theme";
 import { pop, ramp, lerp } from "./anim";
 
-/** Full-frame SVG stage with a camera: scale around (cx, cy) then translate. */
+/** "h" = 16:9 (1920x1080), "v" = 9:16 (1080x1920). Scenes are drawn in the same world coordinates for both. */
+export const OrientCtx = createContext<"h" | "v">("h");
+export const useV = () => useContext(OrientCtx) === "v";
+
+/** Full-frame SVG stage with a camera: scale around (cx, cy) then translate.
+ *  Vertical: the same world is seen through a 1080x1920 window (world shown at `vk` x the camera scale);
+ *  `vcam` overrides the camera, screen-space `bg` is scaled to cover, `voverlay` replaces `overlay`. */
 export const Stage: React.FC<{
   children: React.ReactNode;
   cam?: { x: number; y: number; s: number; r?: number };
+  vcam?: { x: number; y: number; s: number; r?: number };
+  vk?: number;
   bg?: React.ReactNode;
   overlay?: React.ReactNode;
-}> = ({ children, cam = { x: 960, y: 540, s: 1 }, bg, overlay }) => (
-  <svg width={1920} height={1080} viewBox="0 0 1920 1080" style={{ position: "absolute", inset: 0 }}>
-    <Defs />
-    {bg}
-    <g transform={`translate(960 540) rotate(${cam.r ?? 0}) scale(${cam.s}) translate(${-cam.x} ${-cam.y})`}>{children}</g>
-    {overlay}
-    <Grain />
-    <Vignette />
-  </svg>
-);
+  voverlay?: React.ReactNode;
+}> = ({ children, cam = { x: 960, y: 540, s: 1 }, vcam, vk = 1, bg, overlay, voverlay }) => {
+  const V = useV();
+  const W = V ? 1080 : 1920, H = V ? 1920 : 1080;
+  const c = V && vcam ? vcam : cam;
+  const s = V ? c.s * vk : c.s;
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ position: "absolute", inset: 0 }}>
+      <Defs />
+      {V ? <g transform="translate(540 960) scale(1.7778) translate(-960 -540)">{bg}</g> : bg}
+      <g transform={`translate(${W / 2} ${H / 2}) rotate(${c.r ?? 0}) scale(${s}) translate(${-c.x} ${-c.y})`}>{children}</g>
+      {V ? (voverlay ?? <g transform="translate(0 660) scale(0.5625)">{overlay}</g>) : overlay}
+      <Grain w={W} h={H} />
+      <Vignette w={W} h={H} />
+    </svg>
+  );
+};
 
 export const Defs: React.FC = () => (
   <defs>
@@ -74,10 +89,10 @@ export const Defs: React.FC = () => (
 );
 
 /** fine film grain: breaks up perfectly flat fills a little (the reference is ~81% flat, not 99%) */
-export const Grain: React.FC<{ o?: number }> = ({ o = 0.07 }) => (
-  <rect x={0} y={0} width={1920} height={1080} filter="url(#grain)" opacity={o} style={{ mixBlendMode: "overlay" }} />
+export const Grain: React.FC<{ o?: number; w?: number; h?: number }> = ({ o = 0.07, w = 1920, h = 1080 }) => (
+  <rect x={0} y={0} width={w} height={h} filter="url(#grain)" opacity={o} style={{ mixBlendMode: "overlay" }} />
 );
-export const Vignette: React.FC = () => <rect x={0} y={0} width={1920} height={1080} fill="url(#vig)" />;
+export const Vignette: React.FC<{ w?: number; h?: number }> = ({ w = 1920, h = 1080 }) => <rect x={0} y={0} width={w} height={h} fill="url(#vig)" />;
 
 export const SpaceBg: React.FC<{ hue?: string }> = ({ hue = C.space2 }) => (
   <>
@@ -106,9 +121,12 @@ const Nebula: React.FC = () => {
 
 /** twinkling stars with parallax (world-space or screen-space depending on where it is placed) */
 export const Stars: React.FC<{ seed: string; n?: number; w?: number; h?: number; x0?: number; y0?: number }> = ({
-  seed, n = 160, w = 1920, h = 1080, x0 = 0, y0 = 0,
+  seed, n: n0 = 160, w = 1920, h: h0 = 1080, x0 = 0, y0: y00 = 0,
 }) => {
   const f = useCurrentFrame();
+  const V = useV();
+  // the vertical frame sees ~2x more height: spread the stars over it
+  const h = V ? h0 + 1600 : h0, y0 = V ? y00 - 800 : y00, n = V ? Math.round(n0 * 1.8) : n0;
   return (
     <g>
       {Array.from({ length: n }).map((_, i) => {

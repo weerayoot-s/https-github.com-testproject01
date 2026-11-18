@@ -18,9 +18,10 @@ export const Sky: React.FC<{ horizon?: number; warm?: string; moon?: [number, nu
         </linearGradient>
       </defs>
       <rect x={x0 - 400} y={-600} width={w + 800} height={horizon + 640} fill={`url(#sky-${id})`} />
-      {Array.from({ length: 110 }).map((_, i) => {
-        const y = -500 + random(`${id}sy${i}`) * (horizon + 300);
-        const o = Math.max(0, 1 - (y + 500) / (horizon + 400)) * (0.55 + 0.45 * Math.sin(f / 15 + i));
+      <rect x={x0 - 400} y={-2000} width={w + 800} height={1402} fill={C.space0} />
+      {Array.from({ length: 200 }).map((_, i) => {
+        const y = -1500 + random(`${id}sy${i}`) * (horizon + 1300);
+        const o = Math.max(0, Math.min(1, 1 - (y + 500) / (horizon + 400))) * (0.55 + 0.45 * Math.sin(f / 15 + i));
         return <circle key={i} cx={x0 - 300 + random(`${id}sx${i}`) * (w + 600)} cy={y} r={0.8 + random(`${id}sr${i}`) * 1.6} fill={C.cream} opacity={o} />;
       })}
       {moon && (

@@ -67,3 +67,11 @@ python3 tools/synth_audio.py      # เพลง + เอฟเฟกต์
 python3 tools/voice_chunks.py     # ช่วงเสียงจาก public/voice.mp3
 tools/finish.sh                   # render + normalize + glitch check
 ```
+
+## เวอร์ชันแนวตั้ง 9:16 + หน้าปก
+- `out/final_vertical.mp4` — 1080×1920, 75.5 วิ, เสียงเดียวกัน (−16 LUFS), 0 เฟรมเสีย
+  composition `MaryCelesteVertical`: ใช้ฉากชุดเดียวกัน แต่ทุกช็อตมีกล้องแนวตั้งของตัวเอง (`vcam` ใน `Stage`)
+  และย้ายป้ายที่ตกขอบ (แผนที่, โจรสลัด, ป้ายเตือน, ฉากจบ) — ไม่ได้ครอปกลางภาพแนวนอน
+- `out/cover.png` — หน้าปก 1080×1920 (`npx remotion still CoverVertical out/cover.png`)
+  ข้อความหลักอยู่ช่วง y ≈ 420–1640 ยังอยู่ในกรอบเมื่อแพลตฟอร์มครอปเป็น 3:4 ในหน้า grid
+- render ใหม่: `tools/finish.sh MaryCelesteVertical out/final_vertical.mp4`

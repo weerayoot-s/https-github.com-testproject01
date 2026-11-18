@@ -1,6 +1,6 @@
 import React from "react";
 import { useCurrentFrame, random, Easing } from "remotion";
-import { Stage, SpaceBg, Stars, Label, Counter } from "../common";
+import { Stage, SpaceBg, Stars, Label, Counter, useV } from "../common";
 import { Sky, Sea, Ship, Barrel, Lifeboat } from "../sea";
 import { C, FONT } from "../theme";
 import { ramp, pop, lerp } from "../anim";
@@ -25,17 +25,21 @@ export const Pirates: React.FC = () => {
   const cPir = cF(16) - s0, cNoFight = cF(17) - s0, cNoSteal = cF(17) - s0 + 48;
   const cam = { x: lerp(900, 1020, ramp(f, 0, 170)), y: 540, s: lerp(1.1, 1.0, ramp(f, 0, 170)) };
   const q = pop(f, 0);
+  const V = useV();
+  const vcam = { x: 960, y: lerp(660, 620, ramp(f, 0, 170)), s: lerp(1.06, 1.0, ramp(f, 0, 170)) };
+  const qx = V ? 960 : lerp(960, 330, ramp(f, cPir - 6, cPir + 18));
+  const qy = V ? lerp(560, 130, ramp(f, cPir - 6, cPir + 18)) : 560;
   return (
-    <Stage cam={cam} bg={<SpaceBg hue="#3a1060" />}>
+    <Stage cam={cam} vcam={vcam} bg={<SpaceBg hue="#3a1060" />}>
       <Stars seed="pir" n={120} x0={-100} w={2120} />
       {/* big question mark that slides aside */}
-      <g transform={`translate(${lerp(960, 330, ramp(f, cPir - 6, cPir + 18))} 560) scale(${q * lerp(1, 0.65, ramp(f, cPir - 6, cPir + 18))})`}>
+      <g transform={`translate(${qx} ${qy}) scale(${q * lerp(1, 0.65, ramp(f, cPir - 6, cPir + 18))})`}>
         <circle r={230} fill={C.violet} opacity={0.5} filter="url(#blur30)" />
         <text y={130} textAnchor="middle" fontFamily={FONT} fontWeight={700} fontSize={400} fill={C.amber} stroke="#140a3d" strokeWidth={16} paintOrder="stroke">?</text>
         <text y={250} textAnchor="middle" fontFamily={FONT} fontWeight={600} fontSize={64} fill={C.cream} opacity={1 - ramp(f, cPir, cPir + 10)}>เกิดอะไรขึ้น?</text>
       </g>
       {/* theory card: pirates */}
-      <g transform={`translate(960 520) scale(${pop(f, cPir)})`}>
+      <g transform={`translate(960 ${V ? 640 : 520}) scale(${pop(f, cPir)})`}>
         <rect x={-210} y={-230} width={420} height={460} rx={34} fill="#1a0f45" stroke={C.lilac} strokeOpacity={0.4} strokeWidth={3} />
         <rect x={-6} y={-170} width={12} height={250} fill="#c9cbe8" />
         <path d={`M6 -170 h150 q ${-10 + Math.sin(f / 5) * 8} 50 0 100 h-150Z`} fill="#140a1e" />
@@ -46,8 +50,8 @@ export const Pirates: React.FC = () => {
         <text y={170} textAnchor="middle" fontFamily={FONT} fontWeight={600} fontSize={50} fill={C.cream}>โจรสลัด?</text>
         <g transform="translate(0 -40)"><Cross at={cNoFight + 10} r={170} /></g>
       </g>
-      <Label x={1520} y={420} at={cNoFight + 4} text="ไม่มีร่องรอยการต่อสู้" color={C.mint} size={42} />
-      <g transform={`translate(1520 650) scale(${pop(f, cNoSteal)})`}>
+      <Label x={V ? 960 : 1520} y={V ? 1000 : 420} at={cNoFight + 4} text="ไม่มีร่องรอยการต่อสู้" color={C.mint} size={42} />
+      <g transform={`translate(${V ? 960 : 1520} ${V ? 1170 : 650}) scale(${pop(f, cNoSteal)})`}>
         {[0, 1, 2, 3, 4].map((i) => <ellipse key={i} cx={-60 + i * 30} cy={20 - (i % 2) * 8} rx={28} ry={10} fill={C.yellow} stroke="#b88a1a" strokeWidth={3} />)}
         <path d="M40 -30 L70 -60 L100 -30 L70 20Z" fill={C.cyan} />
         <text y={100} textAnchor="middle" fontFamily={FONT} fontWeight={600} fontSize={38} fill={C.cream}>ไม่มีอะไรถูกขโมย</text>
@@ -64,8 +68,10 @@ export const Vapour: React.FC = () => {
   const toBoat = ramp(f, cBoat - 10, cBoat + 25);
   const cam = { x: lerp(lerp(900, 1000, ramp(f, 0, cBoat)), 700, toBoat), y: lerp(520, 640, toBoat), s: lerp(1.2, 1.0, toBoat) };
   const vap = ramp(f, cLeak - 10, cFear + 20);
+  const V = useV();
+  const vcam = { x: lerp(lerp(960, 960, ramp(f, 0, cBoat)), 1000, toBoat), y: lerp(lerp(700, 660, ramp(f, 0, cBoat)), 660, toBoat), s: lerp(0.84, 0.8, toBoat) };
   return (
-    <Stage cam={cam} bg={<rect width={1920} height={1080} fill="#1a0b2a" />}>
+    <Stage cam={cam} vcam={vcam} bg={<rect width={1920} height={1080} fill="#1a0b2a" />}>
       <Label x={960} y={150} at={8} text="ทฤษฎีที่นักประวัติศาสตร์เชื่อกันมาก" color={C.cyan} size={44} out={cBoat - 10} />
       {/* the hold */}
       <g opacity={1 - toBoat}>
@@ -80,13 +86,13 @@ export const Vapour: React.FC = () => {
         })}
         <Label x={960} y={240} at={cLeak} text="ไอแอลกอฮอล์รั่วออกจากถัง" color="#c6f07a" size={46} />
         {/* warning sign */}
-        <g transform={`translate(1500 380) scale(${pop(f, cFear)}) rotate(${Math.sin(f / 3) * 4 * ramp(f, cFear, cFear + 10)})`}>
+        <g transform={`translate(${V ? 960 : 1500} ${V ? 1160 : 380}) scale(${pop(f, cFear)}) rotate(${Math.sin(f / 3) * 4 * ramp(f, cFear, cFear + 10)})`}>
           <circle r={120} fill={C.red} opacity={0.35} filter="url(#blur30)" />
           <path d="M0 -95 L95 75 L-95 75Z" fill={C.yellow} stroke="#140a3d" strokeWidth={10} strokeLinejoin="round" />
           <rect x={-9} y={-35} width={18} height={65} rx={9} fill="#140a3d" />
           <circle cy={52} r={10} fill="#140a3d" />
         </g>
-        <Label x={1500} y={560} at={cFear + 6} text="กลัวเรือระเบิด" color={C.yellow} size={40} />
+        <Label x={V ? 960 : 1500} y={V ? 1340 : 560} at={cFear + 6} text="กลัวเรือระเบิด" color={C.yellow} size={40} />
       </g>
       {/* everyone into the lifeboat */}
       <g opacity={toBoat}>
@@ -111,8 +117,9 @@ export const Rope: React.FC = () => {
   const boatX = lerp(700, -60, drift), shipX = 1400 + f * 0.6;
   const cam = { x: lerp(1000, 820, ramp(f, 0, 140)), y: 560, s: 1.05 };
   const sternX = shipX - 290 * 0.8, sternY = 700;
+  const vcam = { x: lerp(1080, 960, ramp(f, 0, 140)), y: 640, s: 0.76 };
   return (
-    <Stage cam={cam}>
+    <Stage cam={cam} vcam={vcam}>
       <Sky id="rope" horizon={660} moon={[500, 170]} warm="#9a3f72" />
       <Sea layer="back" horizon={660} storm={1.4} />
       <Ship x={shipX} y={700} s={0.8} lifeboat={false} />
@@ -148,8 +155,9 @@ export const Empty: React.FC = () => {
   const s0 = SHOTS.empty;
   const cToday = cF(24) - s0, cKnow = cF(25) - s0;
   const cam = { x: lerp(860, 1060, ramp(f, 0, 160)), y: lerp(560, 520, ramp(f, 0, 160)), s: lerp(1.0, 1.08, ramp(f, 0, 160)) };
+  const vcam = { x: lerp(920, 1000, ramp(f, 0, 160)), y: lerp(640, 600, ramp(f, 0, 160)), s: lerp(1.08, 1.16, ramp(f, 0, 160)) };
   return (
-    <Stage cam={cam}>
+    <Stage cam={cam} vcam={vcam}>
       <Sky id="empty" horizon={620} moon={[1500, 210]} warm="#5a2a6a" />
       <Sea layer="back" horizon={620} />
       <rect x={-400} y={480} width={2800} height={300} fill={C.lilac} opacity={0.18} filter="url(#blur30)" />
@@ -180,10 +188,9 @@ export const Outro: React.FC = () => {
   const cComment = cF(27) - s0;
   const cam = { x: lerp(1100, 960, ramp(f, 0, dur)), y: lerp(600, 540, ramp(f, 0, dur)), s: lerp(1.25, 1.0, ramp(f, 0, dur, Easing.inOut(Easing.sin))) };
   const fadeOut = 1 - ramp(f, dur - 20, dur - 2);
-  return (
-    <div style={{ position: "absolute", inset: 0, opacity: fadeOut, background: "#07021c" }}>
-      <Stage cam={cam}
-        overlay={
+  const V = useV();
+  const vcam = { x: lerp(1160, 1120, ramp(f, 0, dur)), y: lerp(640, 600, ramp(f, 0, dur)), s: lerp(1.15, 0.95, ramp(f, 0, dur, Easing.inOut(Easing.sin))) };
+  const ov = (
           <g>
             <g opacity={ramp(f, 8, 22)}>
               <text x={960} y={170} textAnchor="middle" fontFamily={FONT} fontWeight={700} fontSize={96} fill={C.cream} stroke="#140a3d" strokeWidth={12} paintOrder="stroke">แมรี เซเลสต์</text>
@@ -196,8 +203,25 @@ export const Outro: React.FC = () => {
             </g>
             <text x={1560} y={1000} textAnchor="middle" fontFamily={FONT} fontWeight={600} fontSize={40} fill={C.cream} opacity={ramp(f, cComment + 6, cComment + 16)}>คอมเมนต์บอกกันหน่อย</text>
           </g>
-        }>
-        <Sky id="outro" horizon={680} moon={[380, 380]} warm="#4a2470" />
+  );
+  const vov = (
+    <g>
+      <g opacity={ramp(f, 8, 22)}>
+        <text x={540} y={330} textAnchor="middle" fontFamily={FONT} fontWeight={700} fontSize={110} fill={C.cream} stroke="#140a3d" strokeWidth={14} paintOrder="stroke">แมรี เซเลสต์</text>
+        <text x={540} y={415} textAnchor="middle" fontFamily={FONT} fontWeight={500} fontSize={52} fill={C.cyan}>คุณคิดว่าเกิดอะไรขึ้น?</text>
+      </g>
+      <g transform={`translate(540 1380) scale(${pop(f, cComment) * 1.2})`}>
+        <rect x={-170} y={-70} width={340} height={120} rx={30} fill={C.cream} />
+        <path d="M-90 46 L-110 96 L-50 46Z" fill={C.cream} />
+        {[0, 1, 2].map((i) => <circle key={i} cx={-70 + i * 70} cy={-10} r={16} fill={C.violet} opacity={0.5 + 0.5 * Math.sin(f / 4 - i)} />)}
+      </g>
+      <text x={540} y={1560} textAnchor="middle" fontFamily={FONT} fontWeight={600} fontSize={48} fill={C.cream} opacity={ramp(f, cComment + 6, cComment + 16)}>คอมเมนต์บอกกันหน่อย</text>
+    </g>
+  );
+  return (
+    <div style={{ position: "absolute", inset: 0, opacity: fadeOut, background: "#07021c" }}>
+      <Stage cam={cam} vcam={vcam} overlay={ov} voverlay={vov}>
+        <Sky id="outro" horizon={680} moon={V ? [1360, 260] : [380, 380]} warm="#4a2470" />
         <Sea layer="back" horizon={680} />
         <rect x={300} y={680} width={800} height={14} fill={C.cream} opacity={0.25} filter="url(#blur4)" />
         <Ship x={1150} y={705} s={0.7} torn={1} ghost={1} lifeboat={false} name />

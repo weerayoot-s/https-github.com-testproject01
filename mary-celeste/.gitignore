@@ -2,3 +2,5 @@ node_modules/
 out/*
 !out/final.mp4
 .env
+!out/final_vertical.mp4
+!out/cover.png
